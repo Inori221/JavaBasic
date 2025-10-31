@@ -7,6 +7,7 @@ public class Main {
 		Scanner sc = new Scanner(System.in);
 		ProductsManager manager = new ProductsManager();
 
+		//メニューの表示
 		while (true) {
 			System.out.println("\n---メニュー---");
 			System.out.println("1:商品追加");
@@ -17,28 +18,28 @@ public class Main {
 			System.out.println("0:終了");
 			System.out.print("メニューから操作を選択してください: ");
 			int choice = sc.nextInt();
-			sc.nextLine(); // 改行消費
+			sc.nextLine(); // 改行を消す
 
-			try {
+			try { //例外処理
 				switch (choice) {
 				case 1:
-					System.out.print("商品IDを入力してください: ");
+					System.out.print("商品IDを入力してください: "); //ID入力
 					int id = sc.nextInt();
 					sc.nextLine();
 
-					System.out.print("商品名を入力してください: ");
+					System.out.print("商品名を入力してください: "); //商品名入力
 					String name = sc.nextLine();
 					if (name.isEmpty()) {
 						throw new Exception("無効な入力です。商品名を正しく入力してください。");
 					}
 
-					System.out.print("価格を入力してください: ");
+					System.out.print("価格を入力してください: "); //価格入力
 					int price = sc.nextInt();
 					if (price < 0) {
 						throw new Exception("無効な入力です。価格は0以上を入力してください。");
 					}
 
-					System.out.print("在庫数を入力してください: ");
+					System.out.print("在庫数を入力してください: "); //在庫数入力
 					int stock = sc.nextInt();
 					if (stock < 0) {
 						throw new Exception("無効な入力です。在庫数は0以上を入力してください。");
