@@ -2,75 +2,196 @@ package db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.Scanner;
 
 public class ProductDB {
 
+	static final String URL = "jdbc:mysql://localhost:3306/product_management"
+			+ "?useSSL=false"
+			+ "&allowPublicKeyRetrieval=true"
+			+ "&serverTimezone=UTC";
+
+	static final String USER = "root";
+	static final String PASS = "Araki221";
+
 	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
 
-		// データベース接続情報
-		String url = "jdbc:mysql://localhost:3306/product_management";
-		String user = "root";
-		String password = "Araki221";
+		while (true) {
+			System.out.println("===== ProductDB メニュー =====");
+			System.out.println("1. 商品追加");
+			System.out.println("2. 商品更新");
+			System.out.println("3. 商品削除（カテゴリーID）");
+			System.out.println("4. 商品一覧表示");
+			System.out.println("0. 終了");
+			System.out.print("番号を選んでください → ");
 
-		Connection conn = null;
-		Statement stmt = null;
-		ResultSet rs = null;
+			int select = sc.nextInt();
+			sc.nextLine();
 
-		try {
-			// JDBCドライバの読み込み
-			Class.forName("com.mysql.cj.jdbc.Driver");
+			switch (select) {
+			case 1:
+				insertProduct(sc);
+				break;
 
-			// データベース接続
-			conn = DriverManager.getConnection(url, user, password);
-			System.out.println("DB接続成功");
+			case 2:
+				updateProduct(sc);
+				break;
 
-			// SQL文作成
-			String sql = "SELECT * FROM products";
+			case 3:
+				deleteProduct(sc);
+				break;
 
-			// SQL実行オブジェクト生成
-			stmt = conn.createStatement();
+			case 4:
+				showProducts();
+				break;
 
-			// SQL実行
-			rs = stmt.executeQuery(sql);
+			case 0:
+				System.out.println("終了します。");
+				return;
 
-			System.out.println("-- productsテーブルの全ての商品情報を表示 --");
-
-			// 結果セットの処理
-			while (rs.next()) {
-				int id = rs.getInt("id");
-				String name = rs.getString("name");
-				int price = rs.getInt("price");
-				int stock = rs.getInt("stock");
-				int categoryId = rs.getInt("category_id");
-
-				System.out.println("id: " + id);
-				System.out.println("name: " + name);
-				System.out.println("price: " + price);
-				System.out.println("stock: " + stock);
-				System.out.println("category_id: " + categoryId);
-				System.out.println();
+			default:
+				System.out.println("正しい番号を入力してください。");
 			}
+		}
+	}
 
-		} catch (ClassNotFoundException e) {
-			System.out.println("JDBCドライバが見つかりません: " + e.getMessage());
-		} catch (SQLException e) {
-			System.out.println("DB接続失敗");
+	// ---------------------------
+	// 商品追加
+	// ---------------------------
+	private static void insertProduct(Scanner sc) {
+		System.out.println("--商品の登録--");
+
+		try (Connection con = DriverManager.getConnection(URL, USER, PASS)) {
+
+			System.out.print("商品名を入力してください：\n");
+			String name = sc.nextLine();
+
+			System.out.print("価格を入力してください：\n");
+			int price = sc.nextInt();
+
+			System.out.print("在庫数を入力してください：\n");
+			int stock = sc.nextInt();
+
+			System.out.print("カテゴリーIDを入力してください：\n");
+			int categoryId = sc.nextInt();
+			sc.nextLine();
+
+			String sql = "INSERT INTO products (name, price, stock, category_id) VALUES (?, ?, ?, ?)";
+			PreparedStatement ps = con.prepareStatement(sql);
+
+			ps.setString(1, name);
+			ps.setInt(2, price);
+			ps.setInt(3, stock);
+			ps.setInt(4, categoryId);
+
+			int result = ps.executeUpdate();
+
+			System.out.println("\n登録成功件数： " + result + "件");
+			System.out.println("登録内容：");
+			System.out.println("商品名：" + name + "、 価格：" + price + "、 在庫数：" + stock + "、 カテゴリーID：" + categoryId);
+
+		} catch (Exception e) {
+			System.out.println("登録に失敗しました。");
 			e.printStackTrace();
-		} finally {
-			// リソースをクローズ
-			try {
-				if (rs != null)
-					rs.close();
-				if (stmt != null)
-					stmt.close();
-				if (conn != null)
-					conn.close();
-			} catch (SQLException e) {
-				System.out.println("リソース解放エラー: " + e.getMessage());
+		}
+	}
+
+	// ---------------------------
+	// 商品更新
+	// ---------------------------
+	private static void updateProduct(Scanner sc) {
+		System.out.println("--商品の価格と在庫を更新--");
+
+		try (Connection con = DriverManager.getConnection(URL, USER, PASS)) {
+
+			System.out.print("商品IDを入力してください：\n");
+			int id = sc.nextInt();
+
+			System.out.print("価格を入力してください：\n");
+			int price = sc.nextInt();
+
+			System.out.print("在庫数を入力してください：\n");
+			int stock = sc.nextInt();
+			sc.nextLine();
+
+			String sql = "UPDATE products SET price = ?, stock = ? WHERE id = ?";
+			PreparedStatement ps = con.prepareStatement(sql);
+
+			ps.setInt(1, price);
+			ps.setInt(2, stock);
+			ps.setInt(3, id);
+
+			int result = ps.executeUpdate();
+
+			System.out.println("\n更新成功件数： " + result + "件");
+
+			if (result > 0) {
+				System.out.println("更新内容：");
+				System.out.println("商品ID: " + id + "、 価格：" + price + "、 在庫数：" + stock);
+			} else {
+				System.out.println("更新失敗");
 			}
+
+		} catch (Exception e) {
+			System.out.println("更新に失敗しました。");
+			e.printStackTrace();
+		}
+	}
+
+	// ---------------------------
+	// 商品削除（カテゴリーID指定）
+	// ---------------------------
+	private static void deleteProduct(Scanner sc) {
+		System.out.println("--商品の削除（カテゴリーID指定）--");
+
+		try (Connection con = DriverManager.getConnection(URL, USER, PASS)) {
+
+			System.out.print("削除するカテゴリーIDを入力してください：\n");
+			int categoryId = sc.nextInt();
+			sc.nextLine();
+
+			String sql = "DELETE FROM products WHERE category_id = ?";
+			PreparedStatement ps = con.prepareStatement(sql);
+			ps.setInt(1, categoryId);
+
+			int result = ps.executeUpdate();
+
+			System.out.println("\n削除成功件数： " + result + "件");
+			System.out.println("カテゴリーID " + categoryId + " の商品を削除しました。");
+
+		} catch (Exception e) {
+			System.out.println("削除に失敗しました。");
+			e.printStackTrace();
+		}
+	}
+
+	// ---------------------------
+	// 商品一覧表示
+	// ---------------------------
+	private static void showProducts() {
+		System.out.println("--productsテーブルの商品一覧--");
+
+		try (Connection con = DriverManager.getConnection(URL, USER, PASS)) {
+
+			String sql = "SELECT * FROM products";
+			PreparedStatement ps = con.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+
+			while (rs.next()) {
+				System.out.println(
+						"\nID: " + rs.getInt("id") +
+								"\nname: " + rs.getString("name") +
+								"\nprice: " + rs.getInt("price") +
+								"\nstock: " + rs.getInt("stock") +
+								"\ncategory_id: " + rs.getInt("category_id"));
+			}
+
+		} catch (Exception e) {
+			System.out.println("一覧取得に失敗しました。");
+			e.printStackTrace();
 		}
 	}
 }
