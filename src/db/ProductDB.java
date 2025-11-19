@@ -28,39 +28,31 @@ public class ProductDB {
 			System.out.println("0. 終了");
 			System.out.print("番号を選んでください → ");
 
-			int select = sc.nextInt();
-			sc.nextLine();
+			int select = inputInt(sc);
 
 			switch (select) {
 			case 1:
 				insertProduct(sc);
 				break;
-
 			case 2:
 				updateProduct(sc);
 				break;
-
 			case 3:
 				deleteProduct(sc);
 				break;
-
 			case 4:
 				showProducts();
 				break;
-
 			case 0:
 				System.out.println("終了します。");
 				return;
-
 			default:
 				System.out.println("正しい番号を入力してください。");
 			}
 		}
 	}
 
-	// ---------------------------
 	// 商品追加
-	// ---------------------------
 	private static void insertProduct(Scanner sc) {
 		System.out.println("--商品の登録--");
 
@@ -70,14 +62,13 @@ public class ProductDB {
 			String name = sc.nextLine();
 
 			System.out.print("価格を入力してください：\n");
-			int price = sc.nextInt();
+			int price = inputInt(sc);
 
 			System.out.print("在庫数を入力してください：\n");
-			int stock = sc.nextInt();
+			int stock = inputInt(sc);
 
 			System.out.print("カテゴリーIDを入力してください：\n");
-			int categoryId = sc.nextInt();
-			sc.nextLine();
+			int categoryId = inputInt(sc);
 
 			String sql = "INSERT INTO products (name, price, stock, category_id) VALUES (?, ?, ?, ?)";
 			PreparedStatement ps = con.prepareStatement(sql);
@@ -91,7 +82,11 @@ public class ProductDB {
 
 			System.out.println("\n登録成功件数： " + result + "件");
 			System.out.println("登録内容：");
-			System.out.println("商品名：" + name + "、 価格：" + price + "、 在庫数：" + stock + "、 カテゴリーID：" + categoryId);
+			System.out.println(
+					"商品名：" + name +
+							"、 価格：" + price +
+							"、 在庫数：" + stock +
+							"、 カテゴリーID：" + categoryId);
 
 		} catch (Exception e) {
 			System.out.println("登録に失敗しました。");
@@ -108,14 +103,13 @@ public class ProductDB {
 		try (Connection con = DriverManager.getConnection(URL, USER, PASS)) {
 
 			System.out.print("商品IDを入力してください：\n");
-			int id = sc.nextInt();
+			int id = inputInt(sc);
 
-			System.out.print("価格を入力してください：\n");
-			int price = sc.nextInt();
+			System.out.print("新しい価格を入力してください：\n");
+			int price = inputInt(sc);
 
-			System.out.print("在庫数を入力してください：\n");
-			int stock = sc.nextInt();
-			sc.nextLine();
+			System.out.print("新しい在庫数を入力してください：\n");
+			int stock = inputInt(sc);
 
 			String sql = "UPDATE products SET price = ?, stock = ? WHERE id = ?";
 			PreparedStatement ps = con.prepareStatement(sql);
@@ -130,9 +124,12 @@ public class ProductDB {
 
 			if (result > 0) {
 				System.out.println("更新内容：");
-				System.out.println("商品ID: " + id + "、 価格：" + price + "、 在庫数：" + stock);
+				System.out.println(
+						"商品ID: " + id +
+								"、 新価格：" + price +
+								"、 新在庫数：" + stock);
 			} else {
-				System.out.println("更新失敗");
+				System.out.println("指定した商品IDが存在しません。");
 			}
 
 		} catch (Exception e) {
@@ -141,17 +138,14 @@ public class ProductDB {
 		}
 	}
 
-	// ---------------------------
 	// 商品削除（カテゴリーID指定）
-	// ---------------------------
 	private static void deleteProduct(Scanner sc) {
 		System.out.println("--商品の削除（カテゴリーID指定）--");
 
 		try (Connection con = DriverManager.getConnection(URL, USER, PASS)) {
 
 			System.out.print("削除するカテゴリーIDを入力してください：\n");
-			int categoryId = sc.nextInt();
-			sc.nextLine();
+			int categoryId = inputInt(sc);
 
 			String sql = "DELETE FROM products WHERE category_id = ?";
 			PreparedStatement ps = con.prepareStatement(sql);
@@ -192,6 +186,19 @@ public class ProductDB {
 		} catch (Exception e) {
 			System.out.println("一覧取得に失敗しました。");
 			e.printStackTrace();
+		}
+	}
+
+	// 数値入力を安全に受け取る共通メソッド
+	private static int inputInt(Scanner sc) {
+		while (true) {
+			String input = sc.nextLine();
+
+			try {
+				return Integer.parseInt(input);
+			} catch (NumberFormatException e) {
+				System.out.print("数字を入力してください → ");
+			}
 		}
 	}
 }
