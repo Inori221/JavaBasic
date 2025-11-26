@@ -25,6 +25,7 @@ public class ProductDB {
 			System.out.println("2. 商品更新");
 			System.out.println("3. 商品削除（カテゴリーID）");
 			System.out.println("4. 商品一覧表示");
+			System.out.println("5. 複数商品の在庫更新（トランザクション）");//トランザクション
 			System.out.println("0. 終了");
 			System.out.print("番号を選んでください → ");
 
@@ -43,6 +44,9 @@ public class ProductDB {
 			case 4:
 				showProducts();
 				break;
+			case 5:
+			    updatesProducts(sc);
+			    break;
 			case 0:
 				System.out.println("終了します。");
 				return;
@@ -51,6 +55,85 @@ public class ProductDB {
 			}
 		}
 	}
+
+	// ---------------------------
+	// 複数商品の更新（ID・価格・在庫）
+	// ---------------------------
+	private static void updatesProducts(Scanner sc) {
+
+	    System.out.println("--複数商品の価格と在庫を更新（トランザクション）--");
+
+	    Connection con = null;
+
+	    try {
+	        con = DriverManager.getConnection(URL, USER, PASS);
+	        con.setAutoCommit(false);  // トランザクション開始
+
+	        String sql = "UPDATE products SET price = ?, stock = ? WHERE id = ?";
+	        PreparedStatement ps = con.prepareStatement(sql);
+
+	        System.out.print("更新する商品数を入力してください：");
+	        int count = inputInt(sc);
+
+	        StringBuilder log = new StringBuilder();
+	        int successCount = 0;
+
+	        for (int i = 1; i <= count; i++) {
+	            System.out.println("\n-- 商品の更新 " + i + " --");
+
+	            System.out.print("商品IDを入力してください：");
+	            int id = inputInt(sc);
+
+	            System.out.print("新しい価格を入力してください：");
+	            int price = inputInt(sc);
+
+	            System.out.print("新しい在庫数を入力してください：");
+	            int stock = inputInt(sc);
+
+	            ps.setInt(1, price);
+	            ps.setInt(2, stock);
+	            ps.setInt(3, id);
+
+	            int result = ps.executeUpdate();
+
+	            if (result == 0) {
+	                throw new Exception("商品ID " + id + " は存在しません → 更新失敗");
+	            }
+
+	            successCount++;
+
+	            log.append("商品ID: ").append(id)
+	               .append("、 価格: ").append(price)
+	               .append("、 在庫: ").append(stock)
+	               .append("\n");
+	        }
+
+	        con.commit();  // 成功 → コミット
+	        System.out.println("\n=== コミット成功 ===");
+	        System.out.println("更新成功件数： " + successCount + "件\n");
+
+	        System.out.println("--- 更新内容一覧 ---");
+	        System.out.println(log.toString());
+
+	    } catch (Exception e) {
+	        System.out.println("\nエラー発生 → 全てロールバックします。");
+	        e.printStackTrace();
+	        try {
+	            if (con != null) {
+	                con.rollback();  // ← 正しい rollback
+	            }
+	        } catch (Exception e2) {
+	            System.out.println("ロールバックに失敗しました。");
+	        }
+	    } finally {
+	        try {
+	            if (con != null) con.close();
+	        } catch (Exception e) {}
+	    }
+	}
+
+
+
 
 	// 商品追加
 	private static void insertProduct(Scanner sc) {
